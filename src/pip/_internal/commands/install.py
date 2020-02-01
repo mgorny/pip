@@ -249,6 +249,9 @@ class InstallCommand(RequirementCommand):
         if options.upgrade:
             upgrade_strategy = options.upgrade_strategy
 
+        if not options.use_user_site and not options.target_dir and not options.root_path and not options.prefix_path and not os.getenv('GENTOO_PIP_TESTING'):
+            raise CommandError("(Gentoo) Please run pip with the --user option to avoid breaking python-exec")
+
         cmdoptions.check_dist_restriction(options, check_target=True)
 
         install_options = options.install_options or []
