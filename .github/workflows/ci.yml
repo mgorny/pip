@@ -26,9 +26,6 @@ jobs:
     name: tests / ${{ matrix.python }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}-latest
 
-    if: >-
-      github.event_name != 'pull_request'
-
     strategy:
       fail-fast: true
       matrix:
@@ -64,5 +61,3 @@ jobs:
           -m integration
           --verbose --numprocesses auto --showlocals
           --durations=5
-
-  
