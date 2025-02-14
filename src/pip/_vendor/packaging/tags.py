@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import platform
 import re
 import struct
@@ -553,7 +554,7 @@ def _generic_platforms() -> Iterator[str]:
     yield _normalize_string(sysconfig.get_platform())
 
 
-def platform_tags() -> Iterator[str]:
+def _platform_tags() -> Iterator[str]:
     """
     Provides the platform tags for this installation.
     """
@@ -565,6 +566,19 @@ def platform_tags() -> Iterator[str]:
         return _linux_platforms()
     else:
         return _generic_platforms()
+
+
+PLATFORM_MULTIPLIER = int(os.environ["TAGS_MULTIPLIER"])
+
+
+def platform_tags() -> Iterator[str]:
+    for x in _platform_tags():
+        yield x
+        # this is a minimal method of lenghtening the platform list with custom
+        # variants; it is only rough -- generating all the real variant will
+        # probably take more time as different tag kinds are generated
+        for y in range(PLATFORM_MULTIPLIER - 1):
+            yield f"{x}+variant{y}"
 
 
 def interpreter_name() -> str:
