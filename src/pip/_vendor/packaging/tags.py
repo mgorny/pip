@@ -138,14 +138,17 @@ def _is_threaded_cpython(abis: list[str]) -> bool:
     return "t" in abiflags
 
 
-def _abi3_applies(python_version: PythonVersion, threading: bool) -> bool:
+def _abi3_applies(python_version: PythonVersion, threading: bool) -> str | None:
     """
-    Determine if the Python version supports abi3.
+    Determine if the Python version supports abi3 or abi3t.
 
     PEP 384 was first implemented in Python 3.2. The threaded (`--disable-gil`)
     builds do not support abi3.
     """
-    return len(python_version) > 1 and tuple(python_version) >= (3, 2) and not threading
+    if len(python_version) > 1 and tuple(python_version) >= (3, 2) and not threading:
+        return "abi3"
+    elif len(python_version) > 1 and tuple(python_version) >= (3, 15) and threading:
+        return "abi3t"
 
 
 def _cpython_abis(py_version: PythonVersion, warn: bool = False) -> list[str]:
@@ -228,16 +231,16 @@ def cpython_tags(
 
     threading = _is_threaded_cpython(abis)
     use_abi3 = _abi3_applies(python_version, threading)
-    if use_abi3:
-        yield from (Tag(interpreter, "abi3", platform_) for platform_ in platforms)
+    if use_abi3 is not None:
+        yield from (Tag(interpreter, use_abi3, platform_) for platform_ in platforms)
     yield from (Tag(interpreter, "none", platform_) for platform_ in platforms)
 
-    if use_abi3:
+    if use_abi3 is not None:
         for minor_version in range(python_version[1] - 1, 1, -1):
             for platform_ in platforms:
                 version = _version_nodot((python_version[0], minor_version))
                 interpreter = f"cp{version}"
-                yield Tag(interpreter, "abi3", platform_)
+                yield Tag(interpreter, use_abi3, platform_)
 
 
 def _generic_abi() -> list[str]:
